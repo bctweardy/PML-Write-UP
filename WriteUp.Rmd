@@ -1,0 +1,71 @@
+---
+title: "PML Write Up"
+author: "Brad Tweardy"
+date: "Wednesday, June 17, 2015"
+output: html_document
+---
+Summary
+================================================================================
+The goal of this project is to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants to predict the manner in which they did an exercise. This is the "classe" variable in the training set. 
+
+For the prediction of how well individuals performed the assigned exercise, six young health participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E).
+
+
+
+Data
+================================================================================
+The data for this project was obtained from *http://groupware.les.inf.puc-rio.br/har* and is cleaned using the code below.
+```{r, echo = TRUE}
+library(caret)
+setwd("C:\\Users\\Brad and Kathleen\\Documents\\Coursera\\Machine Learning")
+## Loading data
+testset <- read.csv("pml-testing.csv", header = TRUE, na.strings = c("NA", "#DIV/0!"))
+trainset <- read.csv("pml-training.csv", header = TRUE, na.strings = c("NA", "#DIV/0!"))
+
+## Cleainging training dataset by removing columns with NA's and those with time and user info.
+train_no_na <- trainset[, apply(trainset, 2, function(x) !any(is.na(x)))] 
+dim(train_no_na)
+cleaned_trainset<-train_no_na[,-c(1:8)]
+dim(cleaned_trainset)
+
+## Cleaining test dataset by 
+cleaned_testset <- testset[, names(cleaned_trainset[,-52])]
+dim(cleaned_testset)
+```
+
+In summary, we have excluded all variables with "NA" values and data regarding time and user info in the training data set. This left us with 51 variables and 19,622 observations. We then applied the same 51 variables to the test data set which contains 20 observations.
+
+Partitioning Data
+================================================================================
+Here we take our cleaned training set and partition it in order to generate a 75% training set and a 25% test set to conduct our analysis with.
+```{r, echo = TRUE}
+inTrain <- createDataPartition(y = cleaned_trainset$classe, p = 0.75, list = FALSE)
+training <- cleaned_trainset[inTrain, ]
+test <- cleaned_trainset[-inTrain, ] 
+```
+```{r, echo = TRUE}
+## Training set dimensions
+dim(training)
+```
+```{r, echo = TRUE}
+## Test set dimensions
+dim(test)
+```
+Results
+================================================================================
+```{r, echo = TRUE}
+set.seed(13333)
+fit_contr <- trainControl(method = "cv", number = 5, allowParallel = TRUE, verbose = TRUE)
+rand_forest_fit <- train(classe~., data = training, method = "rf", trControl = fit_contr, verbose = FALSE)
+```
+```{r, echo = TRUE}
+predict_rand_forest <- predict(rand_forest_fit, newdata = test)
+confusionMatrix(predict_rand_forest, test$classe)
+```
+```{r, echo = TRUE}
+master_predict <- predict(rand_forest_fit, newdata = cleaned_testset)
+# Output for the prediction of the 20 cases provided
+master_predict
+```
+In order to analyze the accuracy and estimated prediction error, we generated random forest trees for the training dataset using cross-validation. We see that when using 51 predictors for five classes and using cross-validation at a 5-fold we get a 99.2% accuracy while a 95% confidence interval [0.989-0.994] was achieved and accompanied by a Kappa value of 0.99.
+
