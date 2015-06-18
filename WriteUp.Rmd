@@ -17,7 +17,7 @@ Data
 The data for this project was obtained from *http://groupware.les.inf.puc-rio.br/har* and is cleaned using the code below.
 ```{r, echo = TRUE}
 library(caret)
-setwd("C:\\Users\\Brad and Kathleen\\Documents\\Coursera\\Machine Learning")
+setwd("C:\\Users\\Brad and Kathleen\\Documents\\GitHub\\PML-Write-UP")
 ## Loading data
 testset <- read.csv("pml-testing.csv", header = TRUE, na.strings = c("NA", "#DIV/0!"))
 trainset <- read.csv("pml-training.csv", header = TRUE, na.strings = c("NA", "#DIV/0!"))
@@ -69,3 +69,17 @@ master_predict
 ```
 In order to analyze the accuracy and estimated prediction error, we generated random forest trees for the training dataset using cross-validation. We see that when using 51 predictors for five classes and using cross-validation at a 5-fold we get a 99.2% accuracy while a 95% confidence interval [0.989-0.994] was achieved and accompanied by a Kappa value of 0.99.
 
+Submission of Outcomes
+================================================================================
+A text file of each prediction from the 8master_predict* fuction above is generated in order to submit the via the Coursera course web page with the following function. 
+```{r, echo = TRUE}
+getwd()
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+pml_write_files(master_predict)
+```
